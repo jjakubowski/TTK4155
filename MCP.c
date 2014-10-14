@@ -55,34 +55,54 @@ void MCPrequest(uint8_t Transmit_buffer){
 
 }
 
-void MCPloadTX(uint8_t Data, uint8_t Buffer,uint8_t start_point){
+void MCPloadTX(uint8_t *Data, uint8_t Buffer,uint8_t OnlyData){
+
 
 	SelectSlave();	//selectMCP
-	SPIsend( Buffer | ( start_point) );	//send write address
-	SPIsend(Data);		//send data
+	SPIsend( Buffer | ( OnlyData) );	//send write address
+	while(*Data)
+	{
+		
+		SPIsend(*Data);		//send data
+		Data++;
+	}
 	DeselectSlave();	//deselect MCP
 
 }
+
+
 
 void MCPwrite(uint8_t Data, uint8_t Address){
 
 	SelectSlave();	//selectMCP
 	SPIsend(MCP_WRITE);		//send write command
 	SPIsend(Address);	//send write address
+	
 	SPIsend(Data);		//send data
 	DeselectSlave();	//deselect MCP
 
 }
 
-uint8_t MCPreadRX(uint8_t Buffer,uint8_t start_point){
+void MCPreadRX(uint8_t *Data, uint8_t Buffer,uint8_t start_point){
 
 	uint8_t Byte;
-
+	int i;
+	int length;
+	
 	SelectSlave();	//selectMCP
 	SPIsend(Buffer | ( start_point <<1));
-	Byte = SPIreceive();//read byte
+	
+	if (start_point) length = 8;
+	else length = 13;
+	
+	for(i=0;i<length;i++)
+	{
+		*Data=SPIreceive();
+		Data++;
+	}
+	
 	DeselectSlave();	//deselect MCP
-	return Byte;
+	
 
 }
 

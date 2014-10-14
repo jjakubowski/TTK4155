@@ -20,9 +20,17 @@
 #include "Oled.h"
 #include "SPI.h"
 #include "MCP.h"
+#include "can.h"
 #include "menu.h"
 
 #include <util/delay.h>
+
+
+can_message_t message_rx;
+can_message_t message_tx;
+
+uint8_t Done_flag, go_on;
+uint8_t status; // move to int0
 
 int main(void)
 {
@@ -33,8 +41,8 @@ int main(void)
 	USART_Init(MY_UBRR);
 	
 	
-	//ExtIntInit();
-	//sei(); // global enable interrupts (set I bit in  SREG)
+	ExtIntInit();
+	sei(); // global enable interrupts (set I bit in  SREG)
 	
 	
 	fdevopen(&USART_Transmit, 0);      
@@ -44,6 +52,7 @@ int main(void)
 	SRAM_test();
 	OledInit();
 	
+	Done_flag=0;go_on=0;
 	
 	
 	/*OledClearDisplay();
@@ -58,7 +67,7 @@ int main(void)
 	while(t > 0) {
 	OledPrintCharacter('A'); t--;}*/
 	
-	MenuInit();
+	CanInit();
 	PORTB|=(1<<PB1); //pullup
 	menu_level=0;
 	
@@ -66,36 +75,36 @@ int main(void)
 	
 	struct JoystickOutput Joy;
 	
-	uint8_t a,b;
+	uint8_t a,b,i;
+	
+	message_tx.data[0] =0xaa;
+	message_tx.data[1] =0x55;
+		message_tx.data[2] =0xaa;
+		message_tx.data[3] =0x55;
+			message_tx.data[4] =0xaa;
+			message_tx.data[5] =0x55;
+				message_tx.data[6] =0xaa;
+				message_tx.data[7] =0x55;
+		
+	message_tx.id= 0x0A;
+	message_tx.length =2;
 	
 	
-	MCPinit();
+	CanSendMsg(&message_tx,2,0b11);
 	
-	a = MCPread(0x0f);
-	printf("%x \n",a);
-	_delay_ms(500);
-	a = MCPread(0x0f);
-	printf("%x \n",a);
-	MCPrequest(0x81);
 	
-	/*MCPloadTX(0xb2, 0x40);
-	a = MCPreadRX(0x90);
+	for(i=0;i<14;i++)
+	{
+		printf("%x: %2x \r \n",0b01010000+i,MCPread(0b01010000+i));
+	}
 	
-	MCPloadTX(0xc8, 0x40);
-	b = MCPreadRX(0x90);
+	printf("length once agaian: %2x \r \n",MCPread(0b01010000+5));
 	
-	printf("%x, %x \n", a, b);*/
-	
+	MCPwrite(0x02,0b01010101);
+	printf("length once agaian: %2x \r \n",MCPread(0b01010000+5));
     while(1)
     { 
-		
-		MCPwrite(0xb2, 0x31);
-		
-		a = MCPread(0x61);
-		
-		printf("%x \r \n",a);
-		_delay_ms(500);
-		
+		//
 		
 		/*uint8_t direction;
 
@@ -138,7 +147,43 @@ int main(void)
 		if (menu_level==1) ShowChoice();
 		else ShowMenu();
 		*/
+		if(Done_flag)
+		{
+			printf("INT %x \n \r",status);
+			printf("%c ",message_rx.data[6]);
+			printf("%c \r\n",message_rx.data[7]);
+			Done_flag=0;
+			
+			
+			go_on=1;
+			
+		}
 		
-		_delay_ms(100); //refreshing period
+		
+		if(go_on==1)
+		{
+			status = MCPstatus();
+			
+			printf(" %x \n \r",status);
+			
+		}
+		
+			
+		
+		_delay_ms(500); //refreshing period
     }
+}
+
+
+
+ISR(INT0_vect)
+{
+	
+	status = MCPstatus();
+	MCPmodify(0x00,MCP_TX2IF,MCP_CANINTF);
+	MCPmodify(0x00,MCP_RX0IF,MCP_CANINTF);
+	if(status & (1<<1)) CanReceiveMsg(&message_rx,1);
+	else if(status & (1<<0)) CanReceiveMsg(&message_rx,0);
+	Done_flag=1;
+	
 }
