@@ -55,16 +55,17 @@ void MCPrequest(uint8_t Transmit_buffer){
 
 }
 
-void MCPloadTX(uint8_t *Data, uint8_t Buffer,uint8_t OnlyData){
+void MCPloadTX(uint8_t *Data, uint8_t Buffer,uint8_t length, uint8_t OnlyData){
 
 
 	SelectSlave();	//selectMCP
 	SPIsend( Buffer | ( OnlyData) );	//send write address
-	while(*Data)
+	while(length)
 	{
 		
 		SPIsend(*Data);		//send data
 		Data++;
+		length--;
 	}
 	DeselectSlave();	//deselect MCP
 

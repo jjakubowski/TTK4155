@@ -32,13 +32,13 @@ uint8_t CanInit(void)
 
 void CanSendMsg(can_message_t* message,uint8_t buffer,uint8_t buffer_priority)
 {
-	uint8_t block[] = {(uint8_t) (message->id >> 3), (uint8_t) (message->id <<5), 0x00, 0x00, 2};
+	uint8_t block[] = {(uint8_t) (message->id >> 3), (uint8_t) (message->id <<5), 0x00, 0x00, message->length};
 	MCPwrite(buffer_priority,BUFFER_OFFSET(MCP_TXB0CTRL, buffer));
-	MCPloadTX(block, MCP_LOAD_TX0+buffer*2, NONE);
+	MCPloadTX(block, MCP_LOAD_TX0+buffer*2,5, NONE);
 	
-	MCPloadTX(message->data, MCP_LOAD_TX0+buffer*2, ONLY_DATA);
+	MCPloadTX(message->data, MCP_LOAD_TX0+buffer*2, message->length, ONLY_DATA);
 	
-	//MCPrequest(MCP_RTS_TX2 ); // add req for rest buffers
+	MCPrequest(MCP_RTS_TX2 ); // add req for rest buffers
 }
 
 

@@ -77,17 +77,17 @@ int main(void)
 	
 	uint8_t a,b,i;
 	
-	message_tx.data[0] =0xaa;
-	message_tx.data[1] =0x55;
-		message_tx.data[2] =0xaa;
-		message_tx.data[3] =0x55;
-			message_tx.data[4] =0xaa;
-			message_tx.data[5] =0x55;
-				message_tx.data[6] =0xaa;
-				message_tx.data[7] =0x55;
+	message_tx.data[0] =0x12;
+	message_tx.data[1] =0x34;
+	message_tx.data[2] =0x4a;
+	message_tx.data[3] =0x65;
+	message_tx.data[4] =0xaa;
+	message_tx.data[5] =0x55;
+	message_tx.data[6] =0xaa;
+	message_tx.data[7] =0x55;
 		
 	message_tx.id= 0x0A;
-	message_tx.length =2;
+	message_tx.length =4;
 	
 	
 	CanSendMsg(&message_tx,2,0b11);
@@ -95,13 +95,10 @@ int main(void)
 	
 	for(i=0;i<14;i++)
 	{
-		printf("%x: %2x \r \n",0b01010000+i,MCPread(0b01010000+i));
+		//printf("%x: %2x \r \n",0b01010000+i,MCPread(0b01010000+i));
 	}
 	
-	printf("length once agaian: %2x \r \n",MCPread(0b01010000+5));
 	
-	MCPwrite(0x02,0b01010101);
-	printf("length once agaian: %2x \r \n",MCPread(0b01010000+5));
     while(1)
     { 
 		//
@@ -180,10 +177,15 @@ ISR(INT0_vect)
 {
 	
 	status = MCPstatus();
-	MCPmodify(0x00,MCP_TX2IF,MCP_CANINTF);
-	MCPmodify(0x00,MCP_RX0IF,MCP_CANINTF);
+
 	if(status & (1<<1)) CanReceiveMsg(&message_rx,1);
 	else if(status & (1<<0)) CanReceiveMsg(&message_rx,0);
 	Done_flag=1;
-	
+	status = MCPstatus();
+}
+
+
+ISR(BADISR_vect)
+{
+	Done_flag=1;
 }

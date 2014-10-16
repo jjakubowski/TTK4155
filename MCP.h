@@ -22,7 +22,7 @@ uint8_t MCPstatus(void);
 
 void MCPrequest(uint8_t Address);
 
-void MCPloadTX(uint8_t *Data,uint8_t Buffer,uint8_t OnlyData);
+void MCPloadTX(uint8_t *Data,uint8_t Buffer,uint8_t length, uint8_t OnlyData);
 
 
 void MCPwrite(uint8_t Data, uint8_t Address);
