@@ -1,17 +1,27 @@
 #include "Can.h"
 #include "mcp.h"
 #include "Spi.h"
+#include "ExtInt.h"
 #include <avr/io.h>
 
+
+// Macro for easier calculating of address of further buffers
 #define BUFFER_OFFSET(REGISTER,BUFFER_NUMBER) (REGISTER + BUFFER_NUMBER*0x10)
 
-
+/**
+ *Initialization of CAN Interface.
+ *Initialization of CAN Interface and all layers below
+ *
+ *@return -1 in case of failure, 0 otherwise
+ */
 uint8_t CanInit(void)
 {
 
 	uint8_t value;
 
-	SPIinit(); MCPreset();
+	SPIinit();
+	MCPreset();
+	ExtIntInit();
 	PORTD|=(1<<PD2); //pullup for interrupt
 
 	value = MCPread(MCP_CANSTAT);
@@ -30,18 +40,32 @@ uint8_t CanInit(void)
 	return 0;
 }
 
-void CanSendMsg(can_message_t* message,uint8_t buffer,uint8_t buffer_priority)
+
+/**
+ * TX CAN function
+ * Function sends a message through one of TX buffers with given priority.
+ *
+ * @param message address to CAN type message
+ * @param buffer  buffer number(0,1,2)
+ */
+void CanSendMsg(can_message_t* message,uint8_t buffer)
 {
 	uint8_t block[] = {(uint8_t) (message->id >> 3), (uint8_t) (message->id <<5), 0x00, 0x00, message->length};
-	MCPwrite(buffer_priority,BUFFER_OFFSET(MCP_TXB0CTRL, buffer));
-	MCPloadTX(block, MCP_LOAD_TX0+buffer*2,5, NONE);
-	
+
+
+	MCPloadTX(block, MCP_LOAD_TX0+buffer*2, 5, NONE);
 	MCPloadTX(message->data, MCP_LOAD_TX0+buffer*2, message->length, ONLY_DATA);
 	
-	MCPrequest(MCP_RTS_TX2 ); // add req for rest buffers
+	MCPrequest(MCP_RTS | (1<<(buffer-1)) );
 }
 
-
+/**
+ * RX CAN function
+ * Function receives a message from one of RX buffers
+ *
+ * @param message address to CAN type message
+ * @param buffer  buffer number(0,1)
+ */
 void CanReceiveMsg(can_message_t *message,uint8_t buffer)
 {
 	
@@ -59,8 +83,14 @@ void CanReceiveMsg(can_message_t *message,uint8_t buffer)
 		message->data[i] = temp[i+5];	
 	}
 	
-	
-	
-	
-	
+}
+/**
+ * Changes the buffer priority.
+ *
+ * @param buffer buffer number(0,1,2)
+ * @param priority given priority (0,1,2,3)
+ */
+void CanChangeBufferPriority(uint8_t buffer, uint8_t priority)
+{
+	MCPwrite(priority,BUFFER_OFFSET(MCP_TXB0CTRL, buffer));
 }

@@ -26,7 +26,8 @@ typedef struct{
 } can_message_t;
 
 
-
-void CanSendMsg(can_message_t* message,uint8_t buffer,uint8_t buffer_priority);
+uint8_t CanInit(void);
+void CanSendMsg(can_message_t* message,uint8_t buffer);
 void CanReceiveMsg(can_message_t *message,uint8_t buffer);
+void CanChangeBufferPriority(uint8_t buffer, uint8_t priority);
 #endif /* CAN_H_ */

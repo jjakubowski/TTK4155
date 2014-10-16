@@ -41,7 +41,7 @@ int main(void)
 	USART_Init(MY_UBRR);
 	
 	
-	ExtIntInit();
+
 	sei(); // global enable interrupts (set I bit in  SREG)
 	
 	
@@ -90,7 +90,7 @@ int main(void)
 	message_tx.length =4;
 	
 	
-	CanSendMsg(&message_tx,2,0b11);
+	CanSendMsg(&message_tx,2);
 	
 	
 	for(i=0;i<14;i++)
@@ -187,5 +187,5 @@ ISR(INT0_vect)
 
 ISR(BADISR_vect)
 {
-	Done_flag=1;
+
 }
