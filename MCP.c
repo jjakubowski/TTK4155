@@ -2,7 +2,7 @@
 
 #include "MCP.h"
 #include "SPI.h"
-
+#include "util\delay.h"
 
 /**
  * Function bit modifies a content of register
@@ -160,6 +160,7 @@ void MCPreset(void){
 
 	SelectSlave();	//select MCP
 	SPIsend(MCP_RESET);		//send RESET vector
+	_delay_ms(1);
 	DeselectSlave();	//deselect MCP
 
 }
