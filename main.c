@@ -76,31 +76,27 @@ int main(void)
 	struct JoystickOutput Joy;
 	
 	uint8_t a,b,i;
-	
-	message_tx.data[0] =0x12;
-	message_tx.data[1] =0x34;
-	message_tx.data[2] =0x4a;
-	message_tx.data[3] =0x65;
-	message_tx.data[4] =0xaa;
-	message_tx.data[5] =0x55;
-	message_tx.data[6] =0xaa;
-	message_tx.data[7] =0x55;
+
 		
 	message_tx.id= 0x0A;
-	message_tx.length =4;
+	message_tx.length =2;
 	
 	
-	CanSendMsg(&message_tx,2);
-	
-	
-	for(i=0;i<14;i++)
-	{
-		//printf("%x: %2x \r \n",0b01010000+i,MCPread(0b01010000+i));
-	}
+
 	
 	
     while(1)
     { 
+		
+		_delay_ms(1000);
+		JoystickRead(&Joy);
+		message_tx.data[0] =Joy.JoyAnalogOut.X_axis;
+		message_tx.data[1] =Joy.JoyAnalogOut.Y_axis;
+		
+		CanSendMsg(&message_tx,2);
+		
+		printf("X axis - %4d%% ",(int8_t) Joy.JoyAnalogOut.X_axis);
+		printf("Y axis - %4d%% \r\n",(int8_t) Joy.JoyAnalogOut.Y_axis);
 		//
 		
 		/*uint8_t direction;
@@ -144,30 +140,25 @@ int main(void)
 		if (menu_level==1) ShowChoice();
 		else ShowMenu();
 		*/
-		if(Done_flag)
-		{
-			printf("INT %x \n \r",status);
-			printf("%c ",message_rx.data[6]);
-			printf("%c \r\n",message_rx.data[7]);
-			Done_flag=0;
-			
-			
-			go_on=1;
-			
-		}
-		
-		
-		if(go_on==1)
-		{
-			status = MCPstatus();
-			
-			printf(" %x \n \r",status);
-			
-		}
+		//if(Done_flag)
+		//{
+			//printf("id - %x ",message_rx.id);
+			//printf("length - %x ",message_rx.length);
+			//printf("d1 %x ",message_rx.data[0]);
+			//printf("d2 %x \r\n",message_rx.data[1]);
+			//printf("d3 %x \r\n",message_rx.data[2]);
+			//printf("d4 %x \r\n",message_rx.data[3]);
+			//
+			//Done_flag=0;
+			//
+					//
+		//}
+		//
+		//
 		
 			
 		
-		_delay_ms(500); //refreshing period
+	//	_delay_ms(500); //refreshing period
     }
 }
 
