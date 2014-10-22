@@ -88,10 +88,13 @@ int main(void)
     while(1)
     { 
 		
-		_delay_ms(1000);
+		_delay_ms(100);
 		JoystickRead(&Joy);
 		message_tx.data[0] =Joy.JoyAnalogOut.X_axis;
 		message_tx.data[1] =Joy.JoyAnalogOut.Y_axis;
+		
+				//message_tx.data[0] =0x55;
+				///message_tx.data[1] =0x56;
 		
 		CanSendMsg(&message_tx,2);
 		
